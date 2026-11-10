@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>San Diego Water: Use, Contamination &amp; What You Can Do</title>
+<meta name="description" content="An interactive look at how much water San Diego County uses, what ends up in its creeks and lakes, and how residents can reduce both.">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{
+  --ink:#0e2233;--mut:#4f6577;--bg:#f4f8fa;--card:#fff;--line:#d6e2ea;--accent:#0a6f86;--deep:#06344d;--good:#1f9d6b;
+  --u1:#eaf4fb;--u2:#a9d3ec;--u3:#5aa9d6;--u4:#1f78b4;--u5:#08306b;
+  --c1:#2b8cbe;--c2:#7fcdbb;--c3:#fdc75b;--c4:#e4572e;--c5:#6a3d9a;
+  --radius:16px;--shadow:0 1px 2px rgba(6,52,77,.06),0 8px 24px rgba(6,52,77,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#e6f0f6;--mut:#a3b8c6;--bg:#08161f;--card:#0e2230;--line:#1f3a4b;--accent:#5cc8dd;--deep:#041f2f;--good:#4cd6a0;--shadow:0 8px 24px rgba(0,0,0,.4)}
+  .leaflet-container{background:#0e2230}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:var(--accent)}
+h1,h2,h3{font-family:Georgia,"Iowan Old Style",serif;line-height:1.15;letter-spacing:-.01em}
+h2{font-size:clamp(1.7rem,3.5vw,2.3rem);margin:0 0 10px}
+h3{font-size:1.1rem;margin:.3em 0}
+:focus-visible{outline:3px solid #fdc75b;outline-offset:2px}
+code{background:color-mix(in srgb,var(--mut) 15%,transparent);padding:1px 5px;border-radius:4px;font-size:.9em}
+
+nav.top{position:sticky;top:0;z-index:1000;background:rgba(6,52,77,.94);backdrop-filter:blur(8px);color:#fff}
+nav.top .in{max-width:1120px;margin:auto;display:flex;align-items:center;gap:18px;padding:10px 20px;overflow-x:auto;white-space:nowrap}
+nav.top b{font-family:Georgia,serif;margin-right:auto}
+nav.top a{color:#dff1f7;text-decoration:none;font-size:.9rem;padding:4px 2px;border-bottom:2px solid transparent}
+nav.top a:hover,nav.top a.on{border-color:#7fcdbb;color:#fff}
+
+header.hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(170deg,#06344d 0%,#0a6f86 65%,#37a7a0 100%);padding:96px 20px 90px}
+header.hero canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero .in{position:relative;max-width:1120px;margin:auto}
+.eyebrow{letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;opacity:.85;margin:0 0 14px}
+.hero h1{font-size:clamp(2.3rem,6vw,4.4rem);margin:0 0 18px;max-width:15em}
+.hero p.sub{font-size:1.2rem;max-width:38em;opacity:.95;margin:0 0 30px}
+.stats{display:flex;gap:14px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px 18px;min-width:160px;max-width:230px}
+.stat b{display:block;font:700 2rem/1.1 Georgia,serif}
+.stat span{font-size:.85rem;opacity:.92}
+.cta{display:inline-block;margin-top:26px;background:#fdc75b;color:#2b1d00;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:600}
+.cta.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);margin-left:8px}
+
+section{max-width:1120px;margin:0 auto;padding:64px 20px}
+section.tight{padding-top:0}
+.part{display:inline-block;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:6px}
+.lead{color:var(--mut);max-width:46em;margin:0 0 26px;font-size:1.05rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.grid .card p{margin:0;color:var(--mut);font-size:.95rem}
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+.grid2.even{grid-template-columns:1fr 1fr}
+@media(max-width:860px){.grid2,.grid2.even{grid-template-columns:1fr}}
+.ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);font-size:1.35rem}
+.note{font-size:.84rem;color:var(--mut)}
+.warn{background:color-mix(in srgb,#fdc75b 22%,transparent);border:1px solid color-mix(in srgb,#fdc75b 60%,transparent);border-radius:10px;padding:8px 12px;font-size:.88rem;margin-top:10px}
+.divider{max-width:1120px;margin:0 auto;padding:0 20px}
+.divider hr{border:0;border-top:1px solid var(--line)}
+
+/* buttons / controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:12px}
+.chip{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;cursor:pointer;user-select:none;font-size:.86rem}
+.chip input{accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);flex-wrap:wrap}
+.seg button{border:0;background:none;padding:7px 15px;cursor:pointer;color:var(--ink);font:inherit;font-size:.86rem}
+.seg button.on{background:var(--accent);color:#fff}
+.btn{border:0;background:var(--accent);color:#fff;border-radius:999px;padding:8px 16px;cursor:pointer;font:inherit;font-size:.9rem}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+input[type=range]{width:100%;accent-color:var(--accent);margin:12px 0 4px}
+label.l{display:block;font-size:.92rem;margin:14px 0 2px}
+
+/* usage */
+.ustats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+.ustat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.ustat b{display:block;font:700 1.7rem/1.2 Georgia,serif;color:var(--accent)}
+.ustat span{font-size:.82rem;color:var(--mut)}
+#umap{height:520px;border-radius:12px;border:1px solid var(--line);background:#e8eef1}
+#cmap{height:620px;border-radius:var(--radius);border:1px solid var(--line);box-shadow:var(--shadow)}
+@media(max-width:600px){#umap{height:420px}#cmap{height:480px}}
+.legend{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--mut);margin-top:8px}
+.legend .bar{height:10px;flex:1;border-radius:5px;background:linear-gradient(90deg,var(--u1),var(--u2),var(--u3),var(--u4),var(--u5))}
+.legend .na{display:inline-block;width:14px;height:10px;background:repeating-linear-gradient(45deg,#999,#999 2px,#ddd 2px,#ddd 4px);border-radius:2px;margin-left:10px}
+.big{font:700 2.2rem/1.1 Georgia,serif;margin:4px 0;color:var(--accent)}
+.big span{font:400 .85rem system-ui;color:var(--mut)}
+.pielegend{list-style:none;padding:0;margin:12px 0 0}
+.pielegend li{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;font-size:.9rem}
+.pielegend li.hl{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.pielegend .pct{margin-left:auto;font-weight:600}
+.slice{transition:transform .15s;transform-origin:100px 100px;cursor:pointer}
+.slice:hover,.slice.hl{transform:scale(1.04)}
+.rankbars .row{display:grid;grid-template-columns:minmax(120px,230px) 1fr 52px;gap:10px;align-items:center;padding:4px 6px;border-radius:8px;cursor:pointer;font-size:.88rem}
+.rankbars .row:hover,.rankbars .row.sel{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.rankbars .trk{height:12px;background:var(--line);border-radius:6px;overflow:hidden;position:relative}
+.rankbars .trk b{display:block;height:100%;background:var(--u4);border-radius:6px}
+.rankbars .trk i{position:absolute;top:-2px;bottom:-2px;width:2px;background:#e4572e}
+.rankbars .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+@media(max-width:560px){.rankbars .row{grid-template-columns:1fr 60px}.rankbars .trk{grid-column:1/3}}
+
+/* glass */
+.demo{display:grid;gap:28px;grid-template-columns:280px 1fr;align-items:center}
+@media(max-width:760px){.demo{grid-template-columns:1fr}}
+#glass{width:100%;max-width:280px;margin:auto;display:block;border-radius:14px 14px 40px 40px;border:3px solid color-mix(in srgb,var(--mut) 50%,transparent);background:#e7f4fa}
+.bigc{font:700 3rem/1 Georgia,serif;color:var(--accent)}
+.scalebar{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--c1),var(--c2) 35%,var(--c3) 60%,var(--c4) 80%,var(--c5));position:relative;margin-top:6px}
+.scalebar i{position:absolute;top:-5px;width:4px;height:22px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.refs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.refs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 13px;cursor:pointer;font:inherit;font-size:.86rem}
+.refs button:hover,.refs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.verdict{padding:14px 16px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,transparent);border-left:4px solid var(--accent);min-height:5.2em}
+details{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--card);margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+
+/* cond map */
+.mapwrap{display:grid;grid-template-columns:1fr 300px;gap:16px}
+@media(max-width:900px){.mapwrap{grid-template-columns:1fr}}
+.side{display:flex;flex-direction:column;gap:12px}
+.side .card{padding:16px}
+.clegend{display:flex;flex-direction:column;gap:6px;font-size:.86rem}
+.clegend i{display:inline-block;width:13px;height:13px;border-radius:50%;margin-right:8px;vertical-align:-2px;border:1px solid rgba(0,0,0,.3)}
+.time{display:flex;gap:12px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
+.time input{flex:1;min-width:140px;margin:0}
+.tag{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.75rem;color:#fff;margin-left:6px;vertical-align:1px}
+.near ul{padding:0;margin:8px 0 0}.near li{margin:.5em 0;font-size:.9rem;list-style:none}
+.lakeLabel{background:rgba(255,255,255,.92);border:1px solid #8aa;border-radius:6px;font-size:11px;padding:1px 5px;color:#0e2233;box-shadow:none}
+.lgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.lake{cursor:pointer;transition:transform .15s}.lake:hover{transform:translateY(-3px)}
+.lake .v{font:700 1.7rem/1 Georgia,serif}
+.lake.gap{border-style:dashed;box-shadow:none;background:transparent}
+.bars{display:flex;align-items:flex-end;gap:2px;height:34px;margin-top:10px}
+.bars b{flex:1;border-radius:2px 2px 0 0;min-width:2px}
+.rank{width:100%;border-collapse:collapse;font-size:.93rem}
+.rank th,.rank td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+.rank td.v{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.rank tbody tr{cursor:pointer}.rank tbody tr:hover{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.bar{height:7px;border-radius:4px;background:var(--line);margin-top:5px}.bar b{display:block;height:100%;border-radius:4px}
+
+/* connection */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.steps button{flex:1;min-width:120px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px 8px;cursor:pointer;font:inherit;font-size:.88rem;text-align:center;position:relative}
+.steps button .e{font-size:1.6rem;display:block}
+.steps button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.stepbody{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:center}
+@media(max-width:760px){.stepbody{grid-template-columns:1fr}}
+.factbox{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:14px;padding:18px;text-align:center}
+.factbox .n{font:700 2.6rem/1 Georgia,serif;color:var(--accent)}
+#scatter{width:100%;height:auto}
+#scatter text{fill:var(--mut);font-size:11px}
+#scatter .pt{cursor:pointer}
+
+/* actions */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filters button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:5px 13px;cursor:pointer;font:inherit;font-size:.85rem}
+.filters button.on{background:var(--ink);color:var(--bg)}
+.tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.tip{display:flex;gap:10px;align-items:flex-start;cursor:pointer;user-select:none;border:2px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}
+.tip.on{border-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--card))}
+.tip .ic{font-size:1.6rem}
+.tip b{display:block;font-size:.95rem;line-height:1.3}
+.tip small{color:var(--mut);display:block;line-height:1.4;margin-top:2px}
+.tip .save{color:var(--good);font-weight:600;font-size:.8rem;display:block;margin-top:4px}
+.tip .pw{font-size:.72rem;color:var(--mut)}
+.meter{position:sticky;bottom:12px;margin-top:16px;background:#12303d;color:#fff;border-radius:14px;padding:14px 18px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:space-around;box-shadow:0 6px 20px #0003;z-index:900}
+.meter div{text-align:center}.meter .n{font-size:1.6rem;font-weight:700;color:#7fe0b6}.meter .l{font-size:.75rem;opacity:.85}
+.pways{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:430px}
+.pways span{font-size:.72rem;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:2px 9px;opacity:.55}
+.pways span.on{background:#7fe0b6;color:#04241a;border-color:#7fe0b6;opacity:1;font-weight:600}
+.q button{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;cursor:pointer;font:inherit}
+.q button.right{background:color-mix(in srgb,var(--good) 22%,var(--card));border-color:var(--good)}
+.q button.wrong{background:color-mix(in srgb,#e4572e 20%,var(--card));border-color:#e4572e}
+.fb{font-size:.92rem;color:var(--mut);min-height:22px}
+.leaflet-tooltip{font:13px system-ui}
+footer{background:var(--deep);color:#b9ccd9;padding:44px 20px;font-size:.88rem}
+footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
+</style>
+</head>
+<body>
+
+<nav class="top"><div class="in"><b>💧 San Diego Water</b>
+<a href="#use">1 · Water use</a><a href="#contam">2 · Contamination</a><a href="#connect">3 · The connection</a><a href="#act">4 · What to do</a><a href="#quiz">Quiz</a><a href="#about">Data</a></div></nav>
+
+<header class="hero">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="in">
+    <p class="eyebrow">San Diego County · An interactive portfolio</p>
+    <h1>How much water we use, what ends up in our streams, and what to do about it.</h1>
+    <p class="sub">Real data from the State Water Board, CEDEN, and USGS. See which districts use the most water per person, where creeks and lakes run salty, and how small choices in your yard and home can reduce both.</p>
+    <div class="stats" aria-live="polite">
+      <div class="stat"><b id="h1">–</b><span>gal per person per day, county-average residential use</span></div>
+      <div class="stat"><b id="h2">–</b><span>spread between the thirstiest and most frugal district</span></div>
+      <div class="stat"><b id="h3">–</b><span>of sampled creek sites read "elevated" or higher in conductivity</span></div>
+    </div>
+    <a class="cta" href="#use">Start exploring →</a><a class="cta ghost" href="#act">Jump to what you can do</a>
+  </div>
+</header>
+
+<!-- ===================== PART 1: WATER USE ===================== -->
+<section id="use">
+  <span class="part">Part 1</span>
+  <h2>Who uses San Diego's water?</h2>
+  <p class="lead" id="mapSub"></p>
+  <div class="ustats" id="ustats"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="seg" id="metricToggle" style="margin-bottom:10px"><button class="on" data-m="rgpcd">Residential gal / person / day</button><button data-m="tgpcd">Total supplied gal / person / day</button></div>
+      <div id="umap" role="application" aria-label="Map of water use by district"></div>
+      <div class="legend"><span id="lgLo"></span><div class="bar"></div><span id="lgHi"></span><span class="na"></span><span>flagged / no data</span></div>
+      <p class="note">Grey areas are water systems not in the state's urban supplier dataset (small systems, military bases, etc.).</p>
+    </div>
+    <div class="card" id="detail"></div>
+  </div>
+
+  <div class="grid2 even" style="margin-top:16px">
+    <div class="card">
+      <h3>Thirstiest to most frugal</h3>
+      <p class="note" style="margin:0 0 8px">Residential gallons per person per day. The red tick marks California's indoor-use standard (47). Everything above it is largely outdoor watering and leaks. Click a bar to select the district.</p>
+      <div class="rankbars" id="rankbars"></div>
+    </div>
+    <div class="card">
+      <h3 id="whoTitle">Where the water goes</h3>
+      <div style="display:flex;justify-content:center"><svg id="pie" viewBox="0 0 200 200" width="100%" style="max-width:260px"></svg></div>
+      <ul class="pielegend" id="pieLegend"></ul><p class="note" id="pieNote"></p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>When do we use it?</h3>
+    <p class="note" style="margin:0 0 8px">Residential gallons per person per day, month by month. Summer's bump is mostly lawns and gardens. Dashed line = California's indoor standard.</p>
+    <svg id="bars" viewBox="0 0 700 220" width="100%"></svg><p class="note" id="barNote"></p>
+  </div>
+</section>
+
+<div class="divider"><hr></div>
+
+<!-- ===================== PART 2: CONTAMINATION ===================== -->
+<section id="contam">
+  <span class="part">Part 2</span>
+  <h2>What's in our creeks and lakes?</h2>
+  <p class="lead">Scientists use a simple measurement called <b>conductivity</b> as an early warning for salts and runoff building up in water. Pure water barely carries electricity, but dissolved salts do. Drag the slider to see the idea.</p>
+  <div class="card demo">
+    <canvas id="glass" width="280" height="374" role="img" aria-label="A glass of water; more salt ions appear as conductivity rises"></canvas>
+    <div>
+      <div class="bigc" id="cval">500</div>
+      <div class="note">µS/cm · microsiemens per centimeter</div>
+      <input id="cslider" type="range" min="0" max="1000" value="565" aria-label="Conductivity (logarithmic)">
+      <div class="scalebar"><i id="marker"></i></div>
+      <div class="refs" id="refs"></div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+    </div>
+  </div>
+  <details><summary>Does a high reading mean the water is "contaminated"?</summary>
+  <p>Not necessarily. Much inland San Diego water is naturally salty because of local geology, and imported Colorado River water carries dissolved salts. Tidal lagoons read high naturally. But when a <em>freshwater creek</em> reads in the thousands, salts from irrigation runoff, wastewater, or urban runoff are usually adding up. Conductivity is a flag, not a verdict. It tells us where to look closer. It does not measure bacteria, nutrients or toxic chemicals.</p></details>
+
+  <h3 style="margin-top:36px;font-size:1.4rem">Explore the county</h3>
+  <p class="lead" style="margin-bottom:14px">Each dot is a monitoring station in the California Water Boards' CEDEN database. Rings are lakes and reservoirs. Click for details, play through the years, or find the sites closest to you.</p>
+  <div class="controls">
+    <div class="seg" id="viewSeg"><button data-v="dots" class="on">Dots</button><button data-v="heat">Heat map</button></div>
+    <label class="chip"><input type="checkbox" id="fShow" checked> Creeks &amp; rivers</label>
+    <label class="chip"><input type="checkbox" id="fRun" checked> Storm-drain runoff</label>
+    <label class="chip"><input type="checkbox" id="fLake" checked> Lakes &amp; reservoirs</label>
+    <label class="chip"><input type="checkbox" id="fSea"> Ocean &amp; tidal</label>
+    <button class="btn alt" id="near">📍 Near me</button>
+  </div>
+  <div class="time"><button class="btn" id="play">▶ Play years</button><input id="yr" type="range" min="0" max="17" value="0" aria-label="Year"><span id="yearLabel" style="min-width:150px;font-weight:600">All years (average)</span></div>
+  <div class="mapwrap">
+    <div id="cmap" role="application" aria-label="Map of conductivity monitoring sites"></div>
+    <div class="side">
+      <div class="card"><h3>Legend (µS/cm)</h3><div class="clegend" id="clegend"></div>
+        <p class="note" style="margin:10px 0 0"><span style="display:inline-block;width:13px;height:13px;border-radius:50%;border:3px dashed #7a8a96;vertical-align:-3px;margin-right:8px"></span>Lake with no data</p></div>
+      <div class="card near" id="nearCard" hidden><h3>Closest to you</h3><p class="note">Your location is used only in your browser and is never sent anywhere.</p><ul id="nearList"></ul></div>
+      <div class="card"><p class="note" id="mapcount" aria-live="polite" style="margin:0"></p></div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:40px;font-size:1.4rem">Lakes &amp; reservoirs</h3>
+  <p class="lead" style="margin-bottom:14px">Click a card to zoom to the lake. Bars show yearly averages where there is a record. Dashed outlines have no conductivity measurement in this dataset, which is a gap worth asking about.</p>
+  <div class="lgrid" id="lakeGrid"></div>
+  <p class="note" style="margin-top:12px">Sweetwater and Loveland reservoirs come from a USGS study (1998–2009). Other lakes come from CEDEN, often from one to a few sampling visits, so treat them as snapshots.</p>
+
+  <h3 style="margin-top:40px;font-size:1.4rem">Highest-reading creeks &amp; storm drains</h3>
+  <p class="lead" style="margin-bottom:12px">Inland sites under 5,000 µS/cm (estuaries, lagoons, beaches and the ocean are left out, since saltiness is natural there) with at least 3 measurements. Click a row to see it on the map.</p>
+  <div class="seg" id="rankSeg" style="margin-bottom:12px"><button data-r="0" class="on">Creeks &amp; rivers</button><button data-r="1">Storm-drain runoff</button></div>
+  <div class="card" style="padding:8px 16px"><table class="rank"><thead><tr><th>Site</th><th style="text-align:right">Avg µS/cm</th><th style="text-align:right">Samples</th></tr></thead><tbody id="rankBody"></tbody></table></div>
+</section>
+
+<div class="divider"><hr></div>
+
+<!-- ===================== PART 3: CONNECTION ===================== -->
+<section id="connect">
+  <span class="part">Part 3</span>
+  <h2>How water use and contamination connect</h2>
+  <p class="lead">Water you use outdoors doesn't just disappear. What leaves your yard can run down the gutter into a storm drain, which flows to a creek and then to the ocean, with no treatment in between. Step through the journey, with numbers from the data above.</p>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div class="stepbody"><div id="stepText"></div><div class="factbox" id="stepFact"></div></div>
+  </div>
+
+  <h3 style="margin-top:36px;font-size:1.4rem">Do the thirstiest districts have the saltiest creeks?</h3>
+  <p class="lead" style="margin-bottom:14px">Each dot is a water district. Across: residential water use per person. Up: median conductivity of the creek and river monitoring stations that fall inside the district's boundary. Click a dot to select it in the map above.</p>
+  <div class="card"><svg id="scatter" viewBox="0 0 700 380" role="img" aria-label="Scatter plot of residential water use versus creek conductivity by district"></svg><p id="scatterNote"></p></div>
+</section>
+
+<div class="divider"><hr></div>
+
+<!-- ===================== PART 4: ACTIONS ===================== -->
+<section id="act">
+  <span class="part">Part 4</span>
+  <h2>What you can do: use less, pollute less</h2>
+  <p class="lead">Tap the actions you could take. The meter adds up the water you'd save and shows which ways contamination could reach streams from your home that you'd close off.</p>
+  <div class="filters" id="filters"></div>
+  <div class="tips" id="tips"></div>
+  <div class="meter">
+    <div><div class="n" id="mDay">0</div><div class="l">gallons saved / day</div></div>
+    <div><div class="n" id="mYear">0</div><div class="l">gallons saved / year</div></div>
+    <div><div class="n" id="mPools">0</div><div class="l">backyard pools' worth / year</div></div>
+    <div><div class="n" id="mUsd">$0</div><div class="l">≈ saved / year*</div></div>
+    <div><div class="l" style="margin-bottom:4px">Creek protection pathways covered</div><div class="pways" id="pways"></div></div>
+  </div>
+  <p class="note">Savings per action are common rules of thumb (not from the dataset). *Assumes about $6 per 1,000 gallons, water plus sewer; your bill will differ. Actions with 0 gallons mainly keep pollutants out of storm drains.</p>
+
+  <div class="grid2 even" style="margin-top:20px">
+    <div class="card">
+      <h3>How do you compare?</h3>
+      <label class="l">People in your household: <b id="ppV">3</b></label>
+      <input type="range" id="pp" min="1" max="8" value="3">
+      <label class="l">Household water use: <b id="hhV">200</b> gallons/day <span class="note">(check your bill or meter)</span></label>
+      <input type="range" id="hh" min="30" max="1000" step="10" value="200">
+      <p id="cmpOut"></p>
+    </div>
+    <div class="card">
+      <h3>Your shower &amp; yard calculator</h3>
+      <label class="l">Shower length: <b id="shV">8</b> min <span class="note">(typical head ≈ 2 gal/min; WaterSense ≈ 1.5)</span></label>
+      <input type="range" id="sh" min="2" max="20" value="8">
+      <label class="l">Days per week you water the yard: <b id="lwV">4</b></label>
+      <input type="range" id="lw" min="0" max="7" value="4">
+      <p id="calcOut"></p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Where to get help or report a problem</h3>
+    <ul style="margin:6px 0 0;padding-left:1.2em">
+      <li><a href="https://www.waterboards.ca.gov/sandiego/">San Diego Regional Water Quality Control Board</a>: public input on water quality.</li>
+      <li><a href="https://www.projectcleanwater.org/">Project Clean Water</a>: watershed info and ways to report pollution and illegal dumping.</li>
+      <li>Your water district's website: rebates for turf replacement, smart controllers and efficient toilets are often available.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="quiz" class="tight">
+  <h2>Quick quiz</h2>
+  <div class="card q" id="quiz-box"></div>
+</section>
+
+<footer id="about"><div class="in">
+  <h3 style="color:#fff">About the data</h3>
+  <p><b>Water use:</b> State Water Board, <a href="https://data.ca.gov/dataset/urws-conservation-supply-demand">Urban Retail Water Supplier – Conservation, Supply, and Demand</a>, most recent 12 reported months for <span id="nSup">21</span> San Diego County suppliers. Boundaries: State Water Board <a href="https://gispublic.waterboards.ca.gov/portalserver/rest/services/Drinking_Water/California_Drinking_Water_System_Area_Boundaries/FeatureServer">System Area Boundary Layer</a> (a 2019 snapshot that is still being verified). Residential gal/person/day = reported residential demand ÷ (service population × days). "Total supplied" includes business, irrigation, agriculture and system losses. <span id="flagTxt"></span> The indoor standard of 47 gallons per person per day comes from California law (AB 1668 / SB 606), effective 2025 (42 by 2030).</p>
+  <p><b>Contamination:</b> station averages of specific conductance (converted to µS/cm) from CEDEN via <a href="https://data.ca.gov/dataset/surface-water-chemistry-results">data.ca.gov</a>; Sweetwater and Loveland reservoirs from USGS via the <a href="https://www.waterqualitydata.us/">Water Quality Portal</a> (1998–2009). Stations lie inside a rectangle around the county, so a few border-area stations may appear. CEDEN 2015 and 2016 could not be retrieved. Lake readings below 20 µS/cm were dropped as probable unit errors. "Ocean &amp; tidal" is above 20,000 µS/cm. Station averages mix seasons and sampling programs, so they are a guide, not a ranking of violations.</p>
+  <p><b>The connection chart</b> joins creek stations to district boundaries with a point-in-polygon test, run in your browser. Many things drive creek salinity besides water use (geology, imported water, tidal influence, urban runoff, sampling programs), so the chart shows a pattern, not a cause.</p>
+  <p><b>Not covered:</b> small water systems, military bases and desert communities; recycled water; and bacteria, nutrients or toxic chemicals. Check your utility and county beach reports for drinking-water and swimming safety. Basemap: Esri World Light Gray (© Esri, HERE, Garmin, OpenStreetMap contributors). Water-saving estimates are rules of thumb. Built as a graduate course portfolio project. Source code and data scripts: see the README.</p>
+</div></footer>
+
+<script src="vendor/leaflet.js"></script>
+<script src="vendor/leaflet-heat.js"></script>
+<script src="sd-water-data.js"></script>
+<script src="sd-conductivity-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

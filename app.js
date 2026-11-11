@@ -39,11 +39,16 @@ const inlandCreek=COND.filter(d=>!d[3]&&d[4]<20000&&d[5]>=3);
 const pctElev=Math.round(inlandCreek.filter(d=>d[4]>=1500).length/inlandCreek.length*100);
 const runoffMed=median(COND.filter(d=>d[3]===1&&d[4]<20000&&d[5]>=1).map(d=>d[4]));
 const creekMed=median(COND.filter(d=>!d[3]&&d[4]<20000&&d[5]>=1).map(d=>d[4]));
+/* bacteria stats */
+const bsum=cat=>BACT.filter(r=>r[3]===cat).reduce((a,r)=>{a.n+=r[4];a.e+=r[5];a.wn+=r[7];a.we+=r[8];a.dn+=r[9];a.de+=r[10];return a},{n:0,e:0,wn:0,we:0,dn:0,de:0});
+const BB=bsum(0),BI=bsum(1);
+const pc=(e,n)=>n?Math.round(100*e/n):0, pc1=(e,n)=>n?(100*e/n).toFixed(1):'0';
 
 /* hero stats */
 $('#h1').textContent=Math.round(countyR);
 $('#h2').textContent=(hiS.rgpcd/loS.rgpcd).toFixed(1)+'×';
 $('#h3').textContent=pctElev+'%';
+$('#h4').textContent=pc(BI.e,BI.n)+'%';
 $('#nSup').textContent=SUP.length;
 (()=>{const f=SUP.filter(s=>s.suspect).map(s=>s.name).join(' and ');$('#flagTxt').textContent=f?`${f} report sector figures that fail basic checks, so their residential and sector figures are hidden. Cal-Am's boundary outlines only Coronado while its data covers its whole San Diego district.`:''})();
 
@@ -193,7 +198,7 @@ $$('#rankSeg button').forEach(b=>b.onclick=()=>{$$('#rankSeg button').forEach(x=
 const STEPS=[
  {e:'🚰',t:'Tap',h:'Water arrives at your tap',p:'Much of San Diego County’s water is imported, and imported water carries dissolved salts with it. After you use it, those salts stay in the water.',n:Math.round(countyR),u:'gallons per person per day is the average residential use across the county'},
  {e:'🌿',t:'Yard',h:'A big share goes on the yard',p:'Indoor use is fairly steady. Outdoor watering is what swings. In summer the county’s residential use runs well above its winter low, and a lot of the water above California’s indoor standard goes to lawns, gardens and leaks.',n:'+'+summerBump+'%',u:'residential use in the peak month versus the lowest month'},
- {e:'🌧️',t:'Gutter',h:'Overspray and runoff reach the gutter',p:'Overwatering, sprinkler overspray, car-wash water and hosed-down driveways run into storm drains. That water picks up fertilizer, pet waste, soap, oil and dissolved salts on the way. Storm drains generally don’t go to a treatment plant.',n:fmt(runoffMed),u:'µS/cm is the median conductivity at storm-drain runoff monitoring stations'},
+ {e:'🌧️',t:'Gutter',h:'Overspray and runoff reach the gutter',p:'Overwatering, sprinkler overspray, car-wash water and hosed-down driveways run into storm drains. That water picks up fertilizer, pet waste, soap, oil and dissolved salts on the way. Storm drains generally don’t go to a treatment plant.',n:pc(BI.de,BI.dn)+'%',u:`of dry-season (May–Oct) bacteria samples at inland creek and storm-drain stations topped the beach-posting level. Storm-drain runoff also runs salty: median ${fmt(runoffMed)} µS/cm`},
  {e:'🏞️',t:'Creek',h:'It flows into our creeks',p:'Storm drains empty into creeks and rivers, even on dry days, when overwatering and car washing keep the flow going. Salts and pollutants add up, and sensitive stream life disappears first.',n:fmt(creekMed),u:`µS/cm is the median at creek and river stations; ${pctElev}% of well-sampled sites read “elevated” or higher`},
  {e:'🌊',t:'Ocean',h:'Then to lagoons and the ocean',p:'Creeks end in lagoons and estuaries, the nurseries of coastal fish and birds, and then at the beach. Seawater itself reads about 52,000, so conductivity here isn’t the worry. The bacteria, nutrients and chemicals that ride along with runoff are.',n:'~52,000',u:'µS/cm is typical for seawater, the natural top of the scale'}];
 let stepI=0;
@@ -269,6 +274,7 @@ const QS=[
  {q:`About what share of San Diego County’s reported potable demand is residential?`,a:['About 15%','About two-thirds','About 95%'],r:1,e:`In the state data it’s about ${resShare}% across the districts with usable sector data.`},
  {q:'Which kind of district uses the most water per person at home?',a:['Dense coastal/urban districts','Larger-lot inland and rural districts','They’re all about the same'],r:1,e:`${hiS.name} is highest at about ${Math.round(hiS.rgpcd)} gal/person/day vs about ${Math.round(loS.rgpcd)} in ${loS.name}.`},
  {q:'About what share of well-sampled creek sites in our data read "elevated" (over 1,500 µS/cm) or higher?',a:['About 10%','About 35%','About 60%'],r:[10,35,60].reduce((bi,v,i,arr)=>Math.abs(v-pctElev)<Math.abs(arr[bi]-pctElev)?i:bi,0),e:`${pctElev}% of creek sites with at least 3 measurements. Median storm-drain runoff is about ${fmt(runoffMed)} µS/cm and median creek is about ${fmt(creekMed)}.`},
+ {q:'At beaches in our data, when are bacteria more often above the swim-safety threshold?',a:['Dry season (May–Oct)','Wet season (Nov–Apr)','No difference'],r:(BB.we/BB.wn>BB.de/BB.dn)?1:0,e:`${pc1(BB.we,BB.wn)}% of wet-season beach samples were over 104 per 100 mL vs ${pc1(BB.de,BB.dn)}% in the dry season. Rain flushes bacteria off streets and out of storm drains.`},
  {q:'Water from your yard that runs down the gutter usually goes where?',a:['To a wastewater treatment plant','Straight to a creek or the ocean, mostly untreated','Back to your tap'],r:1,e:'Storm drains are separate from sewers, so anything in the gutter generally ends up in local waters.'},
  {q:'A running toilet can waste about how much per day?',a:['2 gallons','20 gallons','200+ gallons'],r:2,e:'Silent leaks add up fast. Try the food-coloring test in the tank.'}];
 let qi=0,score=0;
@@ -276,6 +282,31 @@ function drawQ(){const b=$('#quiz-box');if(qi>=QS.length){b.innerHTML=`<h3>You g
   const q=QS[qi];b.innerHTML=`<b>Q${qi+1} of ${QS.length}.</b> ${q.q}<div id="ans"></div><p class="fb" id="fb"></p>`;
   q.a.forEach((t,i)=>{const btn=document.createElement('button');btn.textContent=t;btn.onclick=()=>{[...$('#ans').children].forEach((x,j)=>{x.disabled=true;if(j===q.r)x.classList.add('right')});if(i===q.r)score++;else btn.classList.add('wrong');$('#fb').textContent=q.e;
     const n=document.createElement('button');n.textContent='Next →';n.style.textAlign='center';n.onclick=()=>{qi++;drawQ()};$('#ans').appendChild(n)};$('#ans').appendChild(btn)})}
+
+/* ====================== BACTERIA MAP ====================== */
+const BBINS=[[0,2,'#fff1b8','Under 2%'],[2,10,'#fdc075','2–10%'],[10,25,'#f4793f','10–25%'],[25,50,'#d03a2f','25–50%'],[50,101,'#7a0c28','Over 50%']];
+const bcol=p=>(BBINS.find(b=>p>=b[0]&&p<b[1])||BBINS[4])[2];
+$('#blegend').innerHTML=BBINS.map(b=>`<span><i style="background:${b[2]}"></i>${b[3]}</span>`).join('');
+$('#bstats').innerHTML=`
+ <div class="ustat"><b>${pc1(BB.e,BB.n)}%</b><span>of ${fmt(BB.n)} beach and bay samples were over the threshold</span></div>
+ <div class="ustat"><b>${pc1(BB.we,BB.wn)}% vs ${pc1(BB.de,BB.dn)}%</b><span>beach samples over the line in the wet season vs the dry season</span></div>
+ <div class="ustat"><b>${pc(BI.e,BI.n)}%</b><span>of ${fmt(BI.n)} creek and storm-drain samples were over it, wet or dry</span></div>
+ <div class="ustat"><b>${BACT.length}</b><span>stations with 5+ samples, 2020 to Oct 2026</span></div>`;
+const bmap=mkMap('bmap',[32.85,-117.12],10);let bseason='all',blayer=L.layerGroup().addTo(bmap);
+const SEAS={all:'all year',w:'wet season',d:'dry season'};
+const bvals=r=>bseason==='w'?[r[7],r[8]]:bseason==='d'?[r[9],r[10]]:[r[4],r[5]];
+function bpop(r){const [n,e]=bvals(r);const yrs=Object.keys(r[12]);const mx=Math.max(...yrs.map(y=>r[12][y][1]/r[12][y][0]),.01);
+  return `<b>${r[2]}</b><br><b>${pc(e,n)}%</b> of ${n} samples over 104 per 100 mL (${SEAS[bseason]})<br><small>${r[3]===0?'Beach or bay':'Creek / storm drain / inland'} · highest ${fmt(r[6])} · last sampled ${r[11]}</small>`+
+   (yrs.length>1?'<div class="bars" style="height:40px;margin:6px 0 2px">'+yrs.map(y=>{const p=r[12][y][1]/r[12][y][0];return `<b title="${y}: ${Math.round(p*100)}% over (${r[12][y][0]} samples)" style="height:${Math.max(6,p/mx*100)}%;background:${bcol(p*100)}"></b>`}).join('')+`</div><small>${yrs[0]} → ${yrs[yrs.length-1]} (share over threshold by year)</small>`:'')}
+function drawBact(){blayer.clearLayers();let n=0;
+  BACT.slice().sort((a,b)=>bvals(a)[1]/Math.max(bvals(a)[0],1)-bvals(b)[1]/Math.max(bvals(b)[0],1)).forEach(r=>{const [N,E]=bvals(r);if(N<5)return;if(r[3]===0?!$('#bBeach').checked:!$('#bInland').checked)return;n++;
+    const m=L.circleMarker([r[0],r[1]],{radius:r[3]===0?6:5.5,color:'#fff',weight:1,fillColor:bcol(100*E/N),fillOpacity:.92});m.bindPopup(()=>bpop(r));blayer.addLayer(m)});
+  $('#bcount').textContent=n+' stations shown ('+SEAS[bseason]+', 5+ samples in that season).'}
+$$('#bSeason button').forEach(b=>b.onclick=()=>{$$('#bSeason button').forEach(x=>x.classList.remove('on'));b.classList.add('on');bseason=b.dataset.s;drawBact()});
+['bBeach','bInland'].forEach(i=>$('#'+i).onchange=drawBact);drawBact();
+(function(){const w=BACT.filter(r=>r[3]===0&&r[4]>=50).sort((a,b)=>b[5]/b[4]-a[5]/a[4]).slice(0,6);
+  $('#worstBeach').innerHTML=w.map(r=>`<li style="margin:6px 0;cursor:pointer" data-la="${r[0]}" data-lo="${r[1]}"><b>${r[2]}</b><br><span class="note">${pc(r[5],r[4])}% of ${r[4]} samples over</span></li>`).join('');
+  $$('#worstBeach li').forEach(li=>li.onclick=()=>{bmap.flyTo([+li.dataset.la,+li.dataset.lo],13)})})();
 
 /* ====================== INIT ====================== */
 drawULayer();drawRankBars();showDetail(null);drawFilters();drawTips();meter();compare();calc();drawQ();

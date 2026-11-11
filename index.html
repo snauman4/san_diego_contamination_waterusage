@@ -194,6 +194,7 @@ footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
       <div class="stat"><b id="h1">–</b><span>gal per person per day, county-average residential use</span></div>
       <div class="stat"><b id="h2">–</b><span>spread between the thirstiest and most frugal district</span></div>
       <div class="stat"><b id="h3">–</b><span>of sampled creek sites read "elevated" or higher in conductivity</span></div>
+      <div class="stat"><b id="h4">–</b><span>of creek &amp; storm-drain bacteria samples exceed the beach-posting threshold</span></div>
     </div>
     <a class="cta" href="#use">Start exploring →</a><a class="cta ghost" href="#act">Jump to what you can do</a>
   </div>
@@ -282,6 +283,24 @@ footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
   <div class="lgrid" id="lakeGrid"></div>
   <p class="note" style="margin-top:12px">Sweetwater and Loveland reservoirs come from a USGS study (1998–2009). Other lakes come from CEDEN, often from one to a few sampling visits, so treat them as snapshots.</p>
 
+  <h3 id="bacteria" style="margin-top:40px;font-size:1.4rem">Bacteria: beaches, creeks &amp; storm drains</h3>
+  <p class="lead" style="margin-bottom:14px">Conductivity can't tell you whether water is safe to swim in. Fecal indicator bacteria can. California posts a beach when a single <em>enterococcus</em> sample tops <b>104 per 100 mL</b>. Each dot shows the share of 2020–2026 samples above that line. Enterococcus is a warning sign of fecal contamination (from sewage, pets, wildlife), not a direct count of disease-causing germs.</p>
+  <div class="ustats" id="bstats"></div>
+  <div class="controls">
+    <div class="seg" id="bSeason"><button data-s="all" class="on">All year</button><button data-s="w">Wet season (Nov–Apr)</button><button data-s="d">Dry season (May–Oct)</button></div>
+    <label class="chip"><input type="checkbox" id="bBeach" checked> Beaches &amp; bays</label>
+    <label class="chip"><input type="checkbox" id="bInland" checked> Creeks &amp; storm drains</label>
+  </div>
+  <div class="mapwrap">
+    <div id="bmap" role="application" aria-label="Map of bacteria exceedance rates at beaches, creeks and storm drains" style="height:560px;border-radius:var(--radius);border:1px solid var(--line);box-shadow:var(--shadow)"></div>
+    <div class="side">
+      <div class="card"><h3>Share of samples over 104 / 100 mL</h3><div class="clegend" id="blegend"></div></div>
+      <div class="card"><h3>Beaches with most exceedances</h3><p class="note" style="margin:0">At least 50 samples. Click to zoom.</p><ul id="worstBeach" style="padding:0;margin:8px 0 0;list-style:none;font-size:.9rem"></ul></div>
+      <div class="card"><p class="note" id="bcount" aria-live="polite" style="margin:0"></p></div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:10px">Creek and storm-drain sites are often chosen because a problem is suspected (outfalls, impaired creeks), and the 104 threshold is designed for swimming water, so for those sites read the dots as screening, not as a swim-safety grade. Check the County's beach and bay closure reports before you swim.</p>
+
   <h3 style="margin-top:40px;font-size:1.4rem">Highest-reading creeks &amp; storm drains</h3>
   <p class="lead" style="margin-bottom:12px">Inland sites under 5,000 µS/cm (estuaries, lagoons, beaches and the ocean are left out, since saltiness is natural there) with at least 3 measurements. Click a row to see it on the map.</p>
   <div class="seg" id="rankSeg" style="margin-bottom:12px"><button data-r="0" class="on">Creeks &amp; rivers</button><button data-r="1">Storm-drain runoff</button></div>
@@ -361,6 +380,7 @@ footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
   <h3 style="color:#fff">About the data</h3>
   <p><b>Water use:</b> State Water Board, <a href="https://data.ca.gov/dataset/urws-conservation-supply-demand">Urban Retail Water Supplier – Conservation, Supply, and Demand</a>, most recent 12 reported months for <span id="nSup">21</span> San Diego County suppliers. Boundaries: State Water Board <a href="https://gispublic.waterboards.ca.gov/portalserver/rest/services/Drinking_Water/California_Drinking_Water_System_Area_Boundaries/FeatureServer">System Area Boundary Layer</a> (a 2019 snapshot that is still being verified). Residential gal/person/day = reported residential demand ÷ (service population × days). "Total supplied" includes business, irrigation, agriculture and system losses. <span id="flagTxt"></span> The indoor standard of 47 gallons per person per day comes from California law (AB 1668 / SB 606), effective 2025 (42 by 2030).</p>
   <p><b>Contamination:</b> station averages of specific conductance (converted to µS/cm) from CEDEN via <a href="https://data.ca.gov/dataset/surface-water-chemistry-results">data.ca.gov</a>; Sweetwater and Loveland reservoirs from USGS via the <a href="https://www.waterqualitydata.us/">Water Quality Portal</a> (1998–2009). Stations lie inside a rectangle around the county, so a few border-area stations may appear. CEDEN 2015 and 2016 could not be retrieved. Lake readings below 20 µS/cm were dropped as probable unit errors. "Ocean &amp; tidal" is above 20,000 µS/cm. Station averages mix seasons and sampling programs, so they are a guide, not a ranking of violations.</p>
+  <p><b>Bacteria:</b> enterococcus results (CFU or MPN per 100 mL; qPCR "copies" excluded) for the San Diego Regional Board area, 2020 to Oct 2026, from CEDEN's <a href="https://data.ca.gov/dataset/surface-water-fecal-indicator-bacteria-results">fecal indicator bacteria dataset</a> on data.ca.gov (includes BeachWatch, MS4 and TMDL monitoring). A single-sample value over 104 per 100 mL is the beach-posting level; the state's own freshwater objectives use E. coli, so inland dots are a screen only. Stations with fewer than 5 samples are omitted. Wet season = Nov–Apr.</p>
   <p><b>The connection chart</b> joins creek stations to district boundaries with a point-in-polygon test, run in your browser. Many things drive creek salinity besides water use (geology, imported water, tidal influence, urban runoff, sampling programs), so the chart shows a pattern, not a cause.</p>
   <p><b>Not covered:</b> small water systems, military bases and desert communities; recycled water; and bacteria, nutrients or toxic chemicals. Check your utility and county beach reports for drinking-water and swimming safety. Basemap: Esri World Light Gray (© Esri, HERE, Garmin, OpenStreetMap contributors). Water-saving estimates are rules of thumb. Built as a graduate course portfolio project. Source code and data scripts: see the README.</p>
 </div></footer>
@@ -369,6 +389,7 @@ footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
 <script src="vendor/leaflet-heat.js"></script>
 <script src="sd-water-data.js"></script>
 <script src="sd-conductivity-data.js"></script>
+<script src="sd-bacteria-data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -47,6 +47,16 @@ header.hero canvas{position:absolute;inset:0;width:100%;height:100%}
 .cta.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);margin-left:8px}
 
 section{max-width:1120px;margin:0 auto;padding:64px 20px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.tocard{display:block;position:relative;color:inherit;text-decoration:none;transition:transform .15s,border-color .15s;padding-top:30px}
+.tocard:hover{transform:translateY(-3px);border-color:var(--accent)}
+.tocard .tn{position:absolute;top:-14px;left:18px;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font:700 1.1rem Georgia,serif;display:grid;place-items:center;box-shadow:var(--shadow)}
+.tocard h3{margin:0 0 2px;font-size:1.3rem}
+.tocard .tq{margin:0 0 10px;color:var(--mut);font-size:.95rem}
+.tocard ul{margin:0 0 12px;padding-left:1.1em;font-size:.88rem;color:var(--ink)}
+.tocard li{margin:2px 0}
+.tocard .tk{display:block;border-top:1px solid var(--line);padding-top:10px;font-size:.85rem;color:var(--accent);font-weight:600}
+.glance{margin:6px 0 0;padding-left:1.2em}.glance li{margin:.4em 0}
 section.tight{padding-top:0}
 .part{display:inline-block;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:6px}
 .lead{color:var(--mut);max-width:46em;margin:0 0 26px;font-size:1.05rem}
@@ -182,7 +192,7 @@ footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
 <body>
 
 <nav class="top"><div class="in"><b>💧 San Diego Water</b>
-<a href="#use">1 · Water use</a><a href="#contam">2 · Contamination</a><a href="#connect">3 · The connection</a><a href="#act">4 · What to do</a><a href="#quiz">Quiz</a><a href="#about">Data</a></div></nav>
+<a href="#overview">Overview</a><a href="#use">1 · Water use</a><a href="#contam">2 · Contamination</a><a href="#connect">3 · The connection</a><a href="#act">4 · What to do</a><a href="#quiz">Quiz</a><a href="#about">Data</a></div></nav>
 
 <header class="hero">
   <canvas id="heroCanvas" aria-hidden="true"></canvas>
@@ -199,6 +209,50 @@ footer .in{max-width:1120px;margin:auto}footer a{color:#9fd6e0}
     <a class="cta" href="#use">Start exploring →</a><a class="cta ghost" href="#act">Jump to what you can do</a>
   </div>
 </header>
+
+<!-- ===================== OVERVIEW / TABLE OF CONTENTS ===================== -->
+<section id="overview">
+  <span class="part">Overview</span>
+  <h2>What's in this portfolio</h2>
+  <p class="lead">This page tells one story in four parts: how much water San Diego County uses, what ends up in its creeks, lakes and beaches, how the two connect, and what residents can do about both. Everything below is interactive, and every number comes from public data. Pick a part to jump straight to it, or just scroll.</p>
+
+  <div class="toc">
+    <a class="card tocard" href="#use">
+      <span class="tn">1</span>
+      <h3>Water use</h3>
+      <p class="tq">Who uses San Diego's water, and how much?</p>
+      <ul><li>District map of gallons per person per day</li><li>Thirstiest to most frugal ranking</li><li>Where the water goes, by sector</li><li>Month-by-month use vs the state indoor standard</li></ul>
+      <span class="tk" id="tk1"></span>
+    </a>
+    <a class="card tocard" href="#contam">
+      <span class="tn">2</span>
+      <h3>Contamination</h3>
+      <p class="tq">What's in our creeks, lakes and beaches?</p>
+      <ul><li>Conductivity explainer with a salt-ion glass</li><li>Station map with dots, heat view and year-by-year play</li><li>Lakes and reservoirs, with data gaps</li><li>Bacteria map with wet and dry seasons</li><li>Highest-reading creeks and storm drains</li></ul>
+      <span class="tk" id="tk2"></span>
+    </a>
+    <a class="card tocard" href="#connect">
+      <span class="tn">3</span>
+      <h3>The connection</h3>
+      <p class="tq">How do water use and contamination link up?</p>
+      <ul><li>Tap-to-ocean explainer, step by step</li><li>Chart: do the thirstiest districts have the saltiest creeks?</li></ul>
+      <span class="tk" id="tk3"></span>
+    </a>
+    <a class="card tocard" href="#act">
+      <span class="tn">4</span>
+      <h3>What to do</h3>
+      <p class="tq">How can you use less and pollute less?</p>
+      <ul><li>Action planner with a savings meter</li><li>Household and yard calculators</li><li>Where to report a problem</li></ul>
+      <span class="tk" id="tk4"></span>
+    </a>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Findings at a glance</h3>
+    <ul class="glance" id="glance"></ul>
+  </div>
+  <p class="note" style="margin-top:12px">Also on the page: a <a href="#quiz">quick quiz</a> and <a href="#about">notes on the data</a> (sources, caveats and what isn't covered).</p>
+</section>
 
 <!-- ===================== PART 1: WATER USE ===================== -->
 <section id="use">

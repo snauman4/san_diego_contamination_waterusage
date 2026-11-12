@@ -224,7 +224,7 @@ function drawScatter(){const svg=$('#scatter');svg.innerHTML='';
     const lab=p.s.name.replace(/ (Municipal )?Water( District| Company)?| Authority| Irrigation District| Public Utility District|City of /g,'').replace('California American','Cal-Am');
     if(sel||p.s.pop>100000||p.x>105||p.y>3500)el('text',{x:X(p.x)+8,y:Y(p.y)-8,'font-size':10},g).textContent=lab;
     g.onclick=()=>{selectSupplier(p.s)};g.onkeydown=e=>{if(e.key==='Enter')selectSupplier(p.s)}});
-  const rho=pts.length>=5?spearman(pts):null;
+  const rho=pts.length>=5?spearman(pts):null;window.__rho=rho;
   $('#scatterNote').className='note';
   $('#scatterNote').innerHTML=rho==null?'':`Dot size = population served. ${pts.length} districts with at least 5 creek stations. Rank correlation (Spearman) = <b>${rho.toFixed(2)}</b>. `+
     (Math.abs(rho)<.2?'That is no clear relationship.':rho<0?'If anything, the saltiest creeks tend to be in districts where people use <em>less</em> water per person: the dense, urbanized, coastal districts. The thirstiest districts are mostly larger-lot, inland and rural ones.':'The districts that use more water per person tend to have saltier creeks.')+
@@ -310,5 +310,19 @@ $$('#bSeason button').forEach(b=>b.onclick=()=>{$$('#bSeason button').forEach(x=
 
 /* ====================== INIT ====================== */
 drawULayer();drawRankBars();showDetail(null);drawFilters();drawTips();meter();compare();calc();drawQ();
+
+/* overview / table of contents: live numbers */
+(function(){const allDay=TIPS.reduce((s,t)=>s+t.s,0),rho=window.__rho;
+  $('#tk1').textContent=`${Math.round(loS.rgpcd)} to ${Math.round(hiS.rgpcd)} gal per person per day across ${SUP.length} districts`;
+  $('#tk2').textContent=`${pctElev}% of creek sites elevated · ${pc1(BB.e,BB.n)}% of beach samples over the bacteria line`;
+  $('#tk3').textContent=rho==null?'Use vs creek salinity, district by district':`Use vs creek salinity: rank correlation ${rho.toFixed(2)}`;
+  $('#tk4').textContent=`${TIPS.length} actions, up to ${fmt(allDay)} gallons a day saved`;
+  const g=[
+   `Residential water use per person varies <b>${(hiS.rgpcd/loS.rgpcd).toFixed(1)}×</b> across districts, from about ${Math.round(loS.rgpcd)} to ${Math.round(hiS.rgpcd)} gallons a day (county average ${Math.round(countyR)}).`,
+   `<b>${pctElev}%</b> of well-sampled creek sites read "elevated" or higher in conductivity, a sign of salts building up. Lakes and reservoirs have the thinnest data: ${COND_LAKES.gaps.length} of ${COND_LAKES.gaps.length+COND_LAKES.lakes.length} have none here.`,
+   `At beaches, <b>${pc1(BB.we,BB.wn)}%</b> of wet-season samples exceed the bacteria threshold versus <b>${pc1(BB.de,BB.dn)}%</b> in the dry season, so rain makes it worse. At inland creek and storm-drain stations, <b>${pc(BI.e,BI.n)}%</b> do, wet or dry.`,
+   rho==null?'':`The thirstiest districts are <em>not</em> the ones with the saltiest creeks${rho<0?' (if anything, the opposite)':''}. The two problems show up in different places but share the same fix: keep water and pollutants on your property, not in the gutter.`
+  ].filter(Boolean);
+  $('#glance').innerHTML=g.map(t=>`<li>${t}</li>`).join('')})();
 const navs=$$('nav.top a').map(a=>[a,document.querySelector(a.getAttribute('href'))]);
 addEventListener('scroll',()=>{let c=null;navs.forEach(([a,s])=>{if(s.getBoundingClientRect().top<140)c=a});navs.forEach(([a])=>a.classList.toggle('on',a===c))},{passive:true});
